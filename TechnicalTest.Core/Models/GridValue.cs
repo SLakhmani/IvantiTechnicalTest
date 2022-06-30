@@ -15,7 +15,7 @@ namespace TechnicalTest.Core.Models
         }
 
 
-        public GridValue(int row, int column)
+        public GridValue(int row, int? column)
         {
             var numericValueOfCharacter = (char)64 + row;
             Row = ((char)numericValueOfCharacter).ToString();
@@ -24,7 +24,7 @@ namespace TechnicalTest.Core.Models
 
         public string? Row { get; set; }
 
-        public int Column { get; set; }
+        public int? Column { get; set; }
 
         public int GetNumericRow() => Row != null ? char.ToUpper(char.Parse(Row)) - 64 : 0;
     }

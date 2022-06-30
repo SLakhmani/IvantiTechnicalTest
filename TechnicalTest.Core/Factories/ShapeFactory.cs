@@ -29,13 +29,13 @@ namespace TechnicalTest.Core.Factories
             switch (shapeEnum)
             {
                 case ShapeEnum.Triangle:
-
+                    if (shape.Coordinates.Count != 3) return null;
                     // TODO: Return grid value returned from service.
                     // In case the order is not specified
                     var sortedEnumerable = shape.Coordinates.OrderBy(coord => coord.X).ThenBy(coord => coord.Y);
                     List<Coordinate> sortedCoordinates = sortedEnumerable.ToList();
 
-                    Triangle triangleFromCoordinates = new Triangle(sortedCoordinates[0], sortedCoordinates[1], sortedCoordinates[2]);
+                    Triangle triangleFromCoordinates = new(sortedCoordinates[0], sortedCoordinates[1], sortedCoordinates[2]);
                     return _shapeService.ProcessGridValueFromTriangularShape(grid, triangleFromCoordinates);
                 default:
                     return null;

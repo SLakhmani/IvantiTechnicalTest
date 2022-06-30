@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using TechnicalTest.API.DTOs;
 using TechnicalTest.Core;
 using TechnicalTest.Core.Interfaces;
@@ -37,16 +38,17 @@ namespace TechnicalTest.API.Controllers
         [HttpPost]
         public IActionResult CalculateCoordinates([FromBody] CalculateCoordinatesDTO calculateCoordinatesRequest)
         {
-            string errMsg;
             GridValue gridValue;
             Grid grid;
             ShapeEnum shapeType;
 
+            CalculateCoordinatesResponseDTO calculateCoordinatesResponse = new();
+
             // TODO: Get the ShapeEnum and if it is default (ShapeEnum.None) or not triangle, return BadRequest as only Triangle is implemented yet.
             if (calculateCoordinatesRequest.ShapeType == (int)ShapeEnum.None)
             {
-                errMsg = String.Format(@"""ShapeType"": {0} is None, ""ShapeType"" must be 1 for Triangle.", calculateCoordinatesRequest.ShapeType);
-                return BadRequest(errMsg);         
+                calculateCoordinatesResponse.Details = ErrorCodes.GetTriangleError("T100");
+                return BadRequest(calculateCoordinatesResponse);         
             }
 
             // If input string is not in the form '[Row(A-F)][Column(1-12)]', return BadRequest
@@ -56,27 +58,25 @@ namespace TechnicalTest.API.Controllers
             }
             catch (FormatException)
             {
-                errMsg = String.Format(@"""GridValue"": {0} must be in the form [Row(A-F)][Column(1-12)], For Eg. ""A2""", calculateCoordinatesRequest.GridValue);
-                return BadRequest(errMsg);
+                calculateCoordinatesResponse.Details = ErrorCodes.GetTriangleError("T101");
+                return BadRequest(calculateCoordinatesResponse);
             }
 
             grid = new Grid(calculateCoordinatesRequest.Grid.Size);
             shapeType = (ShapeEnum)calculateCoordinatesRequest.ShapeType;
 
             // TODO: Call the Calculate function in the shape factory.
-
             var triangleCoordinates = _shapeFactory.CalculateCoordinates(shapeType, grid, gridValue);
 
             if (triangleCoordinates == null)
             {
                 // TODO: Return BadRequest with error message if the calculate result is null
-                errMsg = String.Format(@"""ShapeType"": {0} is not a triangle, ""ShapeType"" must be 1 for Triangle.", calculateCoordinatesRequest.ShapeType);
-                return BadRequest(errMsg);
+                calculateCoordinatesResponse.Details = ErrorCodes.GetTriangleError("T102");
+                return BadRequest(calculateCoordinatesResponse);
             }
 
             // TODO: Create ResponseModel with Coordinates and return as OK with responseModel
-
-            CalculateCoordinatesResponseDTO calculateCoordinatesResponse = new(triangleCoordinates.Coordinates, calculateCoordinatesRequest.GridValue);
+            calculateCoordinatesResponse = new(triangleCoordinates.Coordinates, calculateCoordinatesRequest.GridValue);
             return Ok(calculateCoordinatesResponse);
         }
 
@@ -97,26 +97,27 @@ namespace TechnicalTest.API.Controllers
         public IActionResult CalculateGridValue([FromBody]CalculateGridValueDTO gridValueRequest)
         {
             // TODO: Get the ShapeEnum and if it is default (ShapeEnum.None) or not triangle, return BadRequest as only Triangle is implemented yet.
-            string errMsg;
             Grid grid;
             ShapeEnum shapeType;
 
+            CalculateGridValueResponseDTO gridValueResponse = new();
+
             if (gridValueRequest.ShapeType == (int)ShapeEnum.None)
             {
-                errMsg = String.Format(@"""ShapeType"": {0} is None, ""ShapeType"" must be 1 for Triangle.", gridValueRequest.ShapeType);
-                return BadRequest(errMsg);
+                gridValueResponse.Details = ErrorCodes.GetTriangleError("T100");
+                return BadRequest(gridValueResponse);
             }
 
-            if (gridValueRequest.Vertices.Count != 3)
+            if (gridValueRequest.ShapeType != (int)ShapeEnum.Triangle)
             {
-                errMsg = String.Format(@"Cannot Calculate ""GridValue"" for Triangle as ""Vertices.Count"": {0}.", gridValueRequest.Vertices.Count);
-                return BadRequest(errMsg);
+                gridValueResponse.Details = ErrorCodes.GetTriangleError("T102");
+                return BadRequest(gridValueResponse);
             }
 
             // TODO: Create new Shape with coordinates based on the parameters from the DTO.
-            List<Coordinate> triangleCoordinates = new List<Coordinate>();
+            List<Coordinate> triangleCoordinates = new();
 
-            for(int i = 0; i < gridValueRequest.Vertices.Count; i++ )
+            for(int i = 0; i < gridValueRequest.Vertices.Count; i++)
             {
                 Coordinate vertex = new(gridValueRequest.Vertices[i].x, gridValueRequest.Vertices[i].y);
                 triangleCoordinates.Add(vertex);
@@ -130,27 +131,26 @@ namespace TechnicalTest.API.Controllers
 
             GridValue? triangleGridValue;
 
+            // TODO: Return BadRequest with error message if the calculate result is null/invalid
             try
             {
                 triangleGridValue = _shapeFactory.CalculateGridValue(shapeType, grid, triangleFromCoordinates);
             }
             catch
             {
-                errMsg = String.Format(@"Coordinates incompatible with ""GridSize"": {0}.", grid.Size);
-                return BadRequest(errMsg);
+                gridValueResponse.Details = ErrorCodes.GetTriangleError("T103");
+                return BadRequest(gridValueResponse);
             }
 
             // TODO: If the GridValue result is null then return BadRequest with an error message.
             if (triangleGridValue == null)
-            {
-                // TODO: Return BadRequest with error message if the calculate result is null
-                errMsg = String.Format(@"""ShapeType"": {0} is not triangle, ""ShapeType"" must be 1 for Triangle.", gridValueRequest.ShapeType);
-                return BadRequest(errMsg);
+            {     
+                gridValueResponse.Details = ErrorCodes.GetTriangleError("T104");
+                return BadRequest(gridValueResponse);
             }
 
             // TODO: Generate a ResponseModel based on the result and return it in Ok();
-
-            CalculateGridValueResponseDTO gridValueResponse = new(triangleGridValue.Row, triangleGridValue.Column);
+            gridValueResponse = new(triangleGridValue.Row, triangleGridValue.Column);
             return Ok(gridValueResponse);
         }
     }
