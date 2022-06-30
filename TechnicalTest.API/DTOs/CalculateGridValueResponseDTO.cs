@@ -2,7 +2,13 @@
 {
     public class CalculateGridValueResponseDTO
     {
-        public CalculateGridValueResponseDTO(string? row, int column)
+        public string? Row { get; set; }
+        public int? Column { get; set; }
+        public string Message { get; set; }
+        public string Details { get; set; }
+        public int StatusCode { get; set; }
+
+        public CalculateGridValueResponseDTO(string? row, int? column)
         {
             Row = row;
             Column = column;
@@ -10,12 +16,10 @@
             StatusCode = 200;
         }
 
-        public string Row { get; set; }
-
-        public int Column { get; set; }
-
-        public string Message { get; set; }
-
-        public int StatusCode { get; set; }
+        public CalculateGridValueResponseDTO()
+        {
+            Message = "Failure";
+            StatusCode = 400;
+        }
     }
 }
