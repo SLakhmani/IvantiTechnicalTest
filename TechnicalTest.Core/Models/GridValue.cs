@@ -1,10 +1,14 @@
-﻿namespace TechnicalTest.Core.Models
+﻿using System.Text.RegularExpressions;
+
+namespace TechnicalTest.Core.Models
 {
     public class GridValue
     {
         public GridValue(string gridValue)
         {
-            if (string.IsNullOrEmpty(gridValue) || gridValue.Length != 2) return;
+            if (string.IsNullOrEmpty(gridValue) || gridValue.Length < 2) return;
+            Regex regObj = new(@"^[a-fA-F]([1-9]|1[012])$");
+            if (!regObj.IsMatch(gridValue)) throw new FormatException();
 
             Row = gridValue[..1];
             Column = int.Parse(gridValue[1..]);
